@@ -1,5 +1,7 @@
 
+import java.io.PrintWriter
 import java.net.URL
+import javax.swing.JOptionPane
 
 import scala.io.Source
 import scala.swing._
@@ -11,6 +13,7 @@ import scala.swing.event.ButtonClicked
 
 //Downloads nodelists and saves them in Awesomenauts formatted XML
 object MainApp extends SimpleSwingApplication{
+  val fc = new FileChooser
   override def top: Frame = new MainFrame{
     contents = new BoxPanel(Orientation.Vertical){
       //GUI
@@ -25,9 +28,23 @@ object MainApp extends SimpleSwingApplication{
         text = "Save"
         reactions += {
           //Downloads nodes and saves them to selected file after clicking save
-          case ButtonClicked(saveButton) => {
+          case ButtonClicked(_) => {
+
             //Processes url into an array of strings representing each node
-            val nodes = Source.fromURL(mapOptions.selection.item.url).mkString
+            val downloadedText = Source.fromURL(mapOptions.selection.item.url).mkString
+            val nodes = downloadedText.split("\n")
+            //Gets a rule from the user
+            val rule = MultiLineOptionPane.showInputDialog("Input rule below. Replace node name with 'NODENAME'")
+            //Gets a save location from the user
+            fc.showSaveDialog(null)
+            val outputFile = fc.selectedFile
+            //Writes the pattern to the designated file using the rule
+            outputFile.createNewFile()
+            val writer = new PrintWriter(outputFile)
+            writer.write(AwesomeXmlFormatter.formatNodes(nodes, rule))
+            writer.close
+            //Celebrate
+            JOptionPane.showMessageDialog(null, "Success!")
           }
         }
       }
